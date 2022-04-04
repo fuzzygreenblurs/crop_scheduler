@@ -3,9 +3,8 @@
 import pandas as pd
 from datetime import datetime
 from schema import db, Cultivar, Recipe
-from tasks import LotHandler
+from tasks import enqueue_tasks, test
 import pdb
-
 
 
 '''note: if needed, multiple Ingester instances can be invoked through Celery jobs to process multiple 
@@ -18,7 +17,6 @@ class Ingester():
         self.crop_schedule = self.read_crop_schedule()
         self.upsert_cultivars()
         self.upsert_recipes()
-        
 
     def upsert_cultivars(self):
         time = datetime.now()
@@ -48,7 +46,7 @@ class Ingester():
     def read_recipe_recommendations(self):
         return pd.read_excel(self.crop_plan, sheet_name="recipe_recommendations")
 
-    def trigger_batch_tasks(self):
+    def lots(self):
         lots = pd.merge(
             self.read_crop_schedule(), 
             self.read_recipe_recommendations(),
@@ -56,7 +54,14 @@ class Ingester():
             right_on=['cultivar_name', 'valid_for_date'],
             how='left'
         )
-        
-        for lot in lots.iterrows(): LotHandler(lot[1]).enqueue_batches()
+        lots['date'] = lots['date'].map(lambda x: x.isoformat())
+        lots['valid_for_date'] = lots['valid_for_date'].map(lambda x: x.isoformat())
+        lots['recipe_ids'] = lots['recipe_ids'].map(lambda x: [int(r) for r in x.split(',')])
+
+        return lots
+
+    def trigger_batch_tasks(self):
+        for lot in self.lots().iterrows():
+            enqueue_tasks(lot[1].to_json())
         
 Ingester("./crop_plan.xlsx").trigger_batch_tasks()
