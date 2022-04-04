@@ -3,7 +3,7 @@
 import pandas as pd
 from datetime import datetime
 from schema import db, Cultivar, Recipe
-from tasks import enqueue_tasks, test
+from tasks import enqueue_batches, test
 import pdb
 
 
@@ -46,7 +46,7 @@ class Ingester():
     def read_recipe_recommendations(self):
         return pd.read_excel(self.crop_plan, sheet_name="recipe_recommendations")
 
-    def lots(self):
+    def lots_data(self):
         lots = pd.merge(
             self.read_crop_schedule(), 
             self.read_recipe_recommendations(),
@@ -54,14 +54,15 @@ class Ingester():
             right_on=['cultivar_name', 'valid_for_date'],
             how='left'
         )
+
         lots['date'] = lots['date'].map(lambda x: x.isoformat())
         lots['valid_for_date'] = lots['valid_for_date'].map(lambda x: x.isoformat())
         lots['recipe_ids'] = lots['recipe_ids'].map(lambda x: [int(r) for r in x.split(',')])
 
         return lots
 
-    def trigger_batch_tasks(self):
-        for lot in self.lots().iterrows():
-            enqueue_tasks(lot[1].to_json())
+    def process_lots_data(self):
+        for lot_data in self.lots_data().iterrows():
+            enqueue_batches(lot_data[1].to_json())
         
-Ingester("./crop_plan.xlsx").trigger_batch_tasks()
+Ingester("./crop_plan.xlsx").process_lots_data()

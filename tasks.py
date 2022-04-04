@@ -1,6 +1,6 @@
 from concurrent.futures import process
 from celery import Celery
-from lot_handler import LotHandler
+from lot import Lot
 from publisher import Publisher
 import json
 import pdb
@@ -19,9 +19,19 @@ def test(arg):
 
 
 @app.task
-def enqueue_tasks(lot):
-    payloads = LotHandler(json.loads(lot)).batch_payloads
-    # publisher = Publisher().declare_queue(f"batch_queue_{self.scheduled_date}")
-    # publisher.enqueue(self.batches())
+def enqueue_batches(lot_data):
+    lot = Lot(json.loads(lot_data))
+    publisher = Publisher()
+    
+    publisher.declare_queue(f"batch_queue_{lot.date}")
+    publisher.enqueue(lot.cultivar_name) # this works
+    publisher.enqueue(json.dumps(
+        lot.batch_payloads, 
+        indent=4, 
+        sort_keys=True, 
+        default=str)
+    ) 
+
+    pdb.set_trace()
 
     #TODO: add logger lines to allow batch tracking

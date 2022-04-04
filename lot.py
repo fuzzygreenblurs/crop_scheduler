@@ -2,7 +2,7 @@ from schema import db, Cultivar, Recipe, Batch, Farm
 from dateutil import parser
 import pdb
 
-class LotHandler():
+class Lot():
     def __init__(self, lot):
         self.store_clean(lot)
         self.batch_payloads = self.generate_batch_payloads()
@@ -53,6 +53,7 @@ class LotHandler():
 
                 payload['id'] = id
                 payloads.append(payload)
+
 
         return payloads
 

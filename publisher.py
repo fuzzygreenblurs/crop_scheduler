@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pika
+import pdb
 
 class Publisher():
     def __init__(self):
