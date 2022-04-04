@@ -39,7 +39,11 @@ class Ingester():
         return pd.read_excel(self.crop_plan, sheet_name="recipes")
 
     def read_crop_schedule(self):
-        return pd.read_excel(self.crop_plan, sheet_name="crop schedule", converters={'crop_count': int, 'farm_id': int, 'default_recipe': int})
+        return pd.read_excel(
+            self.crop_plan, 
+            sheet_name="crop schedule", 
+            converters={'crop_count': int, 'farm_id': int, 'default_recipe': int}
+        )
     
     def read_recipe_recommendations(self):
         return pd.read_excel(self.crop_plan, sheet_name="recipe_recommendations")
