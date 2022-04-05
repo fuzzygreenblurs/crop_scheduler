@@ -3,7 +3,7 @@
 import pandas as pd
 from datetime import datetime
 from schema import db, Cultivar, Recipe
-from tasks import enqueue_batches, test
+from tasks import enqueue_batches
 import pdb
 
 
@@ -63,6 +63,6 @@ class Ingester():
 
     def process_lots_data(self):
         for lot_data in self.lots_data().iterrows():
-            enqueue_batches(lot_data[1].to_json())
+            enqueue_batches.delay(lot_data[1].to_json())
         
 Ingester("./crop_plan.xlsx").process_lots_data()
