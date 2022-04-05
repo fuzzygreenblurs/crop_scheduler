@@ -1,6 +1,6 @@
 from celery import Celery
-from lot import Lot
-from producer import Producer
+from lib.lot import Lot
+from lib.producer import Producer
 import json
 
 # TODO: add backend to rabbit for log storage
