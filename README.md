@@ -24,7 +24,7 @@ Some quick notes:
 &nbsp;
 ## The Workflow
 #### Ingester:
-- spreadsheet files can be passed an instance of the Ingester, which reads through the 3 worksheets (recipes, crop_scj)
+- spreadsheet files can be passed an instance of the Ingester, which reads through the 3 worksheets (recipes, crop_schedules)
 - the Ingester persists any new Recipes or Cultivars included in the spreadsheet in the database
 - it then joins the crop schedule rows with their respective recipe recommendations, forming a list of Lots that can be processed into Batches
 - the Lots data is then formatted into payloads and enqueued for asynchronous processing through a Celery Task Queue worker (see `enqueue_batches`)
