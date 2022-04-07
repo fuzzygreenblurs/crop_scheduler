@@ -4,7 +4,6 @@ import pandas as pd
 from datetime import datetime
 from lib.db import Cultivar, Recipe
 from lib.tasks import enqueue_batches
-import pdb
 
 '''note: if needed, multiple Ingester instances can be invoked through Celery jobs to process multiple 
 spreadsheets in parallel. in that case, all IO operations including DB gets/upserts would also be performed 

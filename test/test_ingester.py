@@ -60,9 +60,9 @@ class TestIngester(TestBase):
 
     def mock_schedule(self):
         return pd.DataFrame([
-            {'date': datetime.date('2022-12-25 00:00:00'), 'cultivar_name': 'Basil', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1}, 
-            {'date': datetime.date('2022-12-25 00:00:00'), 'cultivar_name': 'Arugula', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1},
-            {'date': datetime.date('2022-12-25 00:00:00'), 'cultivar_name': 'Butterhead', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1}
+            {'date': '2022-12-25 00:00:00', 'cultivar_name': 'Basil', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1}, 
+            {'date': '2022-12-25 00:00:00', 'cultivar_name': 'Arugula', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1},
+            {'date': '2022-12-25 00:00:00', 'cultivar_name': 'Butterhead', 'crop_count': 10, 'farm_id': 1, 'default_recipe': 1}
         ])
         
     def mock_recommendations(self):
