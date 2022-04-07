@@ -1,9 +1,6 @@
 from pydantic import BaseModel, ValidationError, root_validator, validator
 from lib.db import Cultivar, Recipe, Batch, Farm
 from datetime import datetime
-from dateutil import parser
-import logging
-import pdb
 
 class Lot(BaseModel):
     date: datetime
@@ -87,7 +84,6 @@ class Lot(BaseModel):
         return bool(Recipe.get_or_none(Recipe.id == recipe_id))
 
     def __backfill_recommendations(self):
-        # TODO: could make this more idiomatic
         ret = self.recipe_ids.copy()
         backfill = self.crop_count - len(self.recipe_ids)
         if backfill > 0:
