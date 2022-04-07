@@ -1,6 +1,6 @@
 ## Architecture Diagram
 
-![Data Flow Overview](./architecture_layout.png)
+![Data Flow Overview](./architecture_final_layout.png)
 
 &nbsp;
 ## Approach
