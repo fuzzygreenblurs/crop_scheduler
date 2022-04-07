@@ -1,11 +1,7 @@
-from unittest import mock
 from test.test_base import TestBase
 from lib.lot import Lot
 from lib.db import *
-from dateutil import parser
 import pandas as pd
-import logging
-import pdb
 
 class TestLot(TestBase):
     def setUp(self):
@@ -15,10 +11,10 @@ class TestLot(TestBase):
 
     def test_will_use_recommended_recipes_first(self):
         mock_lot_data = self.mock_lot_data()
-        mock_lot_data['crop_count'] = '2.3' # quick test for basic Lot level validation
+        mock_lot_data['crop_count'] = '2' # quick test for basic Lot level validation
         mock_lot_data['recipe_ids'] = list(range(1,5)) # recommendations
 
-        payloads = Lot(mock_lot_data).batch_payloads
+        payloads = Lot(**mock_lot_data).batch_payloads()
         assigned_batch_recipes = [p['recipe_id'] for p in payloads]
         self.assertEqual(assigned_batch_recipes, [1,2])
 
@@ -31,7 +27,7 @@ class TestLot(TestBase):
         mock_lot_data['crop_count'] = '4'
         mock_lot_data['recipe_ids'] = [0,1,2]
 
-        payloads = Lot(mock_lot_data).batch_payloads
+        payloads = Lot(**mock_lot_data).batch_payloads()
         assigned_batch_recipes = [p['recipe_id'] for p in payloads]
         self.assertEqual(assigned_batch_recipes, [1,2,1])
 
@@ -44,14 +40,14 @@ class TestLot(TestBase):
         mock_lot_data['crop_count'] = '5'
         mock_lot_data['recipe_ids'] = [1,2]
 
-        payloads = Lot(mock_lot_data).batch_payloads
+        payloads = Lot(**mock_lot_data).batch_payloads()
         assigned_batch_recipes = [p['recipe_id'] for p in payloads]
         self.assertEqual(assigned_batch_recipes, [1,2,1,1,1])
 
     def mock_lot_data(self):
         return {
             'date': '2022-12-25 00:00:00',
-            'cultivar_name': 'Basil',
+            'cultivar_name': 'BaSiL',
             'farm_id': 1,
             'default_recipe': '1',
             'valid_for_date': '2022-12-25 00:00:00'

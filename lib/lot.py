@@ -1,37 +1,47 @@
-from lib.db import Cultivar, Recipe, Batch
+from pydantic import BaseModel, ValidationError, root_validator, validator
+from lib.db import Cultivar, Recipe, Batch, Farm
+from datetime import datetime
 from dateutil import parser
 import logging
 import pdb
 
-class Lot():
-    def __init__(self, lot):
-        self.store_clean(lot)
-        self.batch_payloads = self.generate_batch_payloads()
+class Lot(BaseModel):
+    date: datetime
+    cultivar_name: str
+    crop_count: int
+    farm_id: int
+    default_recipe: int
+    valid_for_date: datetime
+    recipe_ids: list[int] = []
 
-    def store_clean(self, lot):
-        '''
-        TODO: validation: raise for different attribute errors: 
-            - what if crop_count is 0 or 1? 
-            - what about for the other fields (name, scheduled_date, valid_for_date, recommendations, default_recipe)?
-            - only supported cultivars and farms should be accepted!
-            - see pandas converters for this as well: maybe a list of lambdas or small functions that enforce the incoming data
-            - additional check that the scheduled batch date or the recommendation's valid_for_date has not elapsed yet
-        '''
+    @root_validator
+    def validate_referenced_fields(cls, values):
+        values['cultivar_name'] = values['cultivar_name'].lower()
 
-        #TODO: metaprogramming with validated data to only pull the requisite fields:
-        # this will make this method much simpler to read!
-        self.date = parser.parse(lot['date'])
-        self.cultivar_name = Cultivar.get(Cultivar.name == lot['cultivar_name'].lower()).name
-        self.crop_count = max(int(float(lot['crop_count'])), 1)
-        self.farm_id = lot['farm_id']
-        self.default_recipe = max(int(float(lot['default_recipe'])), 1)
-        self.valid_for_date = parser.parse(lot['valid_for_date'])
-        self.recipe_ids = self.__backfill_recommendations(lot['recipe_ids'])
+        if not Cultivar.get_or_none(Cultivar.name == values['cultivar_name']): raise ValidationError(f"unsupported Cultivar: {values['cultivar_name']}")
+        if not Farm.get_or_none(Farm.id == values['farm_id']): raise ValidationError(f"unsupported Farm: {values['farm_id']}")
+        if not Recipe.get_or_none(Recipe.id == values['default_recipe']): raise ValidationError(f"unsupported Recipe: {values['default_recipe']}")
+
+        return values
+
+    @root_validator
+    def validate_timestamps_have_not_elapsed(cls, values):
+        current_time = datetime.now()
+        if current_time >= values['date'] or current_time >= values['valid_for_date']:
+            raise ValidationError(f"Lot deadlines have elapsed.")
+
+        return values
     
-    def generate_batch_payloads(self):
-        #TODO: refactor this method into smaller chunks for readability
-        payloads = []
+    @validator('crop_count')
+    def validate_batch_count_is_positive(cls, value):
+        if value < 1: raise ValueError(f"Lot batch count must be atleast 1.")
+        return value
 
+    #note: if batch_payloads ends up being used repeatedly, this method can be memoized 
+    def batch_payloads(self):
+        self.__backfill_recommendations()
+        
+        payloads = []
         for i in range(self.crop_count):
             recipe_id = self.recipe_ids[i]
             if self.__is_valid_recipe(recipe_id):
@@ -51,7 +61,7 @@ class Lot():
                 try:
                     id = Batch.insert(payload).execute()
                 except:
-                    # TODO: retry 3 times in rollback fashion or skip to next iteration
+                    # TODO: can retry in some kind of rollback fashion or skip to next iteration
                     continue
 
                 payload['id'] = id
@@ -61,7 +71,6 @@ class Lot():
 
     def __is_valid_recipe(self, recipe_id):
         '''
-        TODO: this approach can be brittle: the lot handler must be able to validate lot data from other sources if needed
         note: at this point we should have ensured that recommendations and lots have not expired since:
             # (1) the left join should match the recommendation list for each crop with associated cultivar lot of the day
             # (2) the scheduled lot itself has not expired
@@ -77,10 +86,11 @@ class Lot():
         '''
         return bool(Recipe.get_or_none(Recipe.id == recipe_id))
 
-    def __backfill_recommendations(self, recipe_ids):
-        ret = recipe_ids
-        backfill = int(self.crop_count) - len(recipe_ids)
+    def __backfill_recommendations(self):
+        # TODO: could make this more idiomatic
+        ret = self.recipe_ids.copy()
+        backfill = self.crop_count - len(self.recipe_ids)
         if backfill > 0:
             ret.extend([self.default_recipe] * backfill)
 
-        return ret
+        self.recipe_ids = ret
