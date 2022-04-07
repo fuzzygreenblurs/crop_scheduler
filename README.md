@@ -1,3 +1,12 @@
+## Bring Up:
+
+```sh
+invoke startRabbit # terminal window 1
+invoke startCelery # terminal window 2
+invoke consume batch-queue-{2022-12-26 00:00:00} # terminal window 3 (use 'batch-queue-{{date}} format to consume batches with different scheduled dates)
+invoke runTests # can be run independently at any time (synchronous tests)
+```
+
 ## Architecture Diagram
 
 ![Data Flow Overview](./architecture_final_layout.png)
