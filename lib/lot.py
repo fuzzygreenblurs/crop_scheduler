@@ -13,11 +13,12 @@ class Lot(BaseModel):
 
     @root_validator
     def validate_referenced_fields(cls, values):
+        print(f'validation_values: {values}')
         values['cultivar_name'] = values['cultivar_name'].lower()
 
-        if not Cultivar.get_or_none(Cultivar.name == values['cultivar_name']): raise ValidationError(f"unsupported Cultivar: {values['cultivar_name']}")
-        if not Farm.get_or_none(Farm.id == values['farm_id']): raise ValidationError(f"unsupported Farm: {values['farm_id']}")
-        if not Recipe.get_or_none(Recipe.id == values['default_recipe']): raise ValidationError(f"unsupported Recipe: {values['default_recipe']}")
+        if not Cultivar.get_or_none(Cultivar.name == values['cultivar_name']): raise ValueError(f"unsupported Cultivar: {values['cultivar_name']}")
+        # if not Farm.get_or_none(Farm.id == values['farm_id']): raise ValueError(f"unsupported Farm: {values['farm_id']}")
+        if not Recipe.get_or_none(Recipe.id == values['default_recipe']): raise ValueError(f"unsupported Recipe: {values['default_recipe']}")
 
         return values
 
